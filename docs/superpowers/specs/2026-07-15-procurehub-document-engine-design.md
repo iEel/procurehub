@@ -1,7 +1,9 @@
 # ProcureHub Document Engine Design
 
-**Status:** Ready for user review<br>
+**Status:** Approved<br>
 **Date:** 2026-07-15<br>
+**Approved date:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 **Product:** ProcureHub<br>
 Scope: Generic contract-first DOCX template management, preparation, Carbone rendering, and generated-document storage
 

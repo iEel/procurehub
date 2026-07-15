@@ -1,7 +1,8 @@
 # ProcureHub Developer Handoff
 
-**Status:** Foundation documentation updated; review requested<br>
+**Status:** Approved foundation documentation<br>
 **Last reviewed:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 Audience: Developers, reviewers, architects, designers, and AI coding agents
 
 ## 1. Purpose
@@ -12,11 +13,11 @@ This is an index and guardrail document. Detailed requirements belong under `doc
 
 ## 2. Current Project State
 
-ProcureHub is a new project. The repository contains approved design direction plus newly written foundation documents awaiting final review. It has no application framework, database layer, or production implementation.
+ProcureHub is a new project. The repository contains approved design direction and approved foundation documents. It has no application framework, database layer, or production implementation.
 
 Approved technology directions are Node.js, Carbone On-Premise, React Email, and Microsoft Graph with Microsoft 365. Frontend framework, backend framework, database, ORM, queue, object storage, authentication, deployment, and testing choices still require an approved implementation plan or architecture decision record before they are introduced.
 
-Current foundation document set. Documents marked `Approved` or ADRs marked `Accepted` govern immediately; documents marked `Ready for user review` become authoritative after final review:
+Current approved foundation document set. Documents marked `Approved` and ADRs marked `Accepted` govern immediately:
 
 1. [Workflow, SLA, and Notification Design](docs/superpowers/specs/2026-07-13-procurehub-workflow-design.md)
 2. [ProcureHub Design System](docs/design/DESIGN_SYSTEM.md)

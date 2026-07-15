@@ -1,7 +1,9 @@
 # ProcureHub File and Document Security
 
-**Status:** Ready for user review<br>
+**Status:** Approved<br>
 **Date:** 2026-07-15<br>
+**Approved date:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 Scope: DOCX templates, images, attachments, generated PDFs, storage access, Carbone integration, and document audit
 
 ## 1. Security Objectives

@@ -1,7 +1,9 @@
 # ProcureHub System Architecture
 
-**Status:** Ready for user review<br>
+**Status:** Approved<br>
 **Date:** 2026-07-15<br>
+**Approved date:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 Scope: Logical architecture and module boundaries; physical deployment and undecided framework choices are excluded
 
 ## 1. Architecture Goals

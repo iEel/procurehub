@@ -1,7 +1,9 @@
 # ProcureHub Core Data Model
 
-**Status:** Ready for user review<br>
+**Status:** Approved<br>
 **Date:** 2026-07-15<br>
+**Approved date:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 Scope: Logical platform data model before database and ORM selection
 
 ## 1. Purpose

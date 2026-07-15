@@ -1,7 +1,9 @@
 # ProcureHub Organization Model
 
-**Status:** Ready for user review<br>
+**Status:** Approved<br>
 **Date:** 2026-07-15<br>
+**Approved date:** 2026-07-15<br>
+**Approved by:** Product Owner<br>
 **Product:** ProcureHub<br>
 Scope: Multi-company, multi-branch organization structure, membership, position assignment, and approver resolution context
 
