@@ -206,16 +206,47 @@ fixed_role
 fixed_user
 ```
 
+Workflow-definition fallback and approver-position fallback are separate decisions. Every organization-position resolver must declare a `resolverScopePolicy`; a resolver must not invent its own fallback.
+
+Initial policies:
+
+```text
+exact_only
+branch_then_company
+department_branch_then_department
+division_branch_then_division
+```
+
+Policy behavior:
+
+| Policy | Resolution order |
+| --- | --- |
+| `exact_only` | Use only the exact company, branch, division, and department scope configured by the resolver |
+| `branch_then_company` | Company + Branch position, then Company-wide position |
+| `department_branch_then_department` | Company + Branch + Department position, then Company + Department position |
+| `division_branch_then_division` | Company + Branch + Division position, then Company + Division position |
+
+Default resolver mapping:
+
+| Resolver | Required policy |
+| --- | --- |
+| `requester_department_head`, `owner_department_head` | `department_branch_then_department` |
+| `requester_division_head`, `owner_division_head` | `division_branch_then_division` |
+| `purchasing_head`, `accounting_head` | `branch_then_company` |
+| `fixed_user`, `fixed_role` | `exact_only` unless the workflow configuration explicitly defines another supported policy |
+
+The workflow step persists both resolver code and scope policy. Changing a policy requires a new workflow-definition version. Runtime task snapshots record the attempted scopes and selected assignment.
+
 Resolution order for an organization position:
 
 1. Validate workflow context and effective date.
-2. Find the effective primary position assignment for the required scope.
+2. Evaluate the scopes allowed by the configured `resolverScopePolicy` in order and find the first effective primary position assignment.
 3. Apply an effective acting assignment when organization policy requires it.
 4. Apply an effective approval delegation.
 5. Enforce self-approval and distinct-approver policies.
 6. Return the resolved user and resolution metadata.
 
-If the required user cannot be resolved during preflight, submission is blocked and no partial workflow instance is created.
+If the required user cannot be resolved within the declared policy during preflight, submission is blocked and no partial workflow instance is created. The resolver never falls through to a broader undeclared scope.
 
 ## 10. Duplicate and Self-Approval Rules
 

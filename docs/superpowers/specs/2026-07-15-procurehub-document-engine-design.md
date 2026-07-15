@@ -25,6 +25,7 @@ Node.js owns contracts, source data mapping, validation, templates, versions, st
 - Carbone Community/Free dynamic-image features are not required.
 - Header and footer images are patched into the DOCX package by Node.js before Carbone rendering.
 - One master DOCX form is maintained per document type in version 1; company/branch identity is provided by versioned document assets.
+- Template activation uses maker-checker separation in version 1: the uploader cannot activate the same template version.
 - Rendering is queue-capable and idempotent.
 
 ## 3. Non-Goals
@@ -236,6 +237,8 @@ file-security validation passed
 activation policy passed
 ```
 
+Version 1 activation policy requires `activatedBy != createdBy`. The API enforces this rule server-side even if the client hides or disables the action.
+
 An invalid upload remains available to its authorized administrator with readable errors, unless security validation requires immediate quarantine or rejection.
 
 ## 11. Template Versioning
@@ -245,6 +248,7 @@ An invalid upload remains available to its authorized administrator with readabl
 - A file hash is recorded.
 - Exactly one active master template exists per document type in version 1.
 - Activating a draft archives the previously active version transactionally.
+- The user who uploaded or created a template version cannot activate that same version.
 - Existing generated documents keep the original template and contract versions.
 - Regeneration with a new version creates a new GeneratedDocument record.
 
@@ -284,11 +288,11 @@ Maximum compressed upload size is 20 MB. Additional ZIP safety limits are define
 Header and footer images are versioned assets selected using document company and branch context.
 
 ```text
-BranchDocumentAssetSet
+DocumentAssetSet
 - id
 - companyId
-- branchId
-- version
+- branchId nullable; null means Company Default
+- assetVersion
 - headerImagePath
 - footerImagePath
 - file hashes
@@ -304,7 +308,19 @@ Asset rules:
 - Validate image type using content signatures.
 - Preserve old versions used by generated documents.
 - Header and footer dimensions/aspect ratios follow the master-template placeholder contract.
-- Activation requires a successful preview against a representative template.
+- Exactly one active asset set exists per exact `(companyId, branchId)` scope.
+- A document type that requires branded assets selects them in this order: Company + Branch, then Company Default.
+- There is no Global Default for final branded documents. If neither allowed scope exists, generation is blocked with a readable configuration error.
+- The selected scope and asset version are stored in the generated-document snapshot.
+- Asset activation requires a successful preview against the current active master template.
+
+Preview coverage rules:
+
+- Before a master template can activate, all registered sample cases must pass at least once.
+- Every active company/branch asset set must pass the normal-data and multi-page sample cases against the candidate template.
+- Before a new asset set can activate, it must pass the normal-data and multi-page sample cases against the current active template.
+- Preview results record template version, asset-set ID/version, sample-case code, preparer version, and output hash.
+- A failed required combination blocks activation; administrators cannot replace it with a warning-only override in version 1.
 
 ## 14. DOCX Preparation and Header/Footer Patching
 
@@ -322,7 +338,7 @@ type TemplatePreparer = {
 };
 ```
 
-The default preparer returns the original buffer. The branch-asset preparer:
+The default preparer returns the original buffer. The document-asset preparer:
 
 1. Opens a working copy of the validated DOCX.
 2. Locates configured header/footer image placeholders by controlled alternative-text tags.
@@ -358,7 +374,7 @@ Preview flow:
 2. Re-run or verify current validation results.
 3. Select a registered sample case and authorized sample organization context.
 4. Validate sample data against the schema.
-5. Prepare the DOCX, including optional branch assets.
+5. Resolve Company + Branch assets, fall back only to Company Default, and prepare the DOCX when the template requires branded assets.
 6. Render through Carbone.
 7. Validate the response as a PDF.
 8. Store the preview PDF.
@@ -456,7 +472,7 @@ documentType and refId
 documentNumber nullable
 templateId and templateVersion
 contractVersion
-branchAssetSetId and version nullable
+documentAssetSetId and assetVersion nullable
 preparerVersion
 dataSnapshotJson
 approvalSnapshotJson nullable
@@ -493,7 +509,7 @@ Logical paths:
 
 ```text
 templates/{documentType}/{templateId}/v{version}.docx
-assets/{companyId}/{branchId}/{assetSetId}/...
+assets/{companyId}/{branchId-or-company-default}/{assetSetId}/...
 previews/{documentType}/{templateId}/{previewId}.pdf
 generated/{documentType}/{year}/{generatedDocumentId}.pdf
 ```
@@ -514,14 +530,14 @@ Paths are generated server-side and normalized. Storage can move from local disk
 ### DocumentTemplate
 
 ```text
-id, documentType, name, version
+id, documentType, name, templateVersion
 lifecycleStatus, validationStatus, previewStatus
 storagePath, fileHash
 detectedTags, unknownTags, missingRequiredTags
 contractVersion, validationErrors
 previewPdfPath, lastPreviewedAt
 createdBy, createdAt, activatedBy, activatedAt
-version/concurrency token
+concurrencyVersion
 ```
 
 ### GeneratedDocument
@@ -529,7 +545,7 @@ version/concurrency token
 ```text
 id, documentType, refId, documentNumber nullable
 templateId, templateVersion, contractVersion
-branchAssetSetId/version nullable
+documentAssetSetId/assetVersion nullable
 dataSnapshotJson, approvalSnapshotJson nullable
 pdfPath/fileHash nullable until successful generation
 status: generating | generated | failed | superseded | voided
@@ -543,7 +559,8 @@ A terminal render failure updates the intent record to `failed` and leaves PDF m
 ```text
 id, documentType, refId, templateId
 idempotencyKey
-status, attemptCount, maxAttempts
+status: queued | rendering | retrying | succeeded | failed | cancelled
+attemptCount, maxAttempts
 lastErrorCode, safeLastError
 requestedBy, createdAt, startedAt, finishedAt
 leaseOwner/leaseUntil or version token
@@ -614,7 +631,8 @@ Minimum tests:
 - Lifecycle, validation, and preview statuses are independent.
 - Preview success is required for activation.
 - One immutable active master version is selected per document type.
-- Node.js patches versioned branch header/footer assets without Carbone dynamic images.
+- Node.js patches resolved, versioned company/branch header/footer assets without Carbone dynamic images.
+- Required asset coverage and maker-checker policy block unsafe template or asset activation.
 - Carbone receives only a prepared DOCX and validated JSON.
 - Final PDFs and snapshots are stored by Node.js.
 - Re-rendering creates a new record and preserves history.

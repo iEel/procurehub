@@ -21,11 +21,12 @@ Current foundation document set. Documents marked `Approved` or ADRs marked `Acc
 1. [Workflow, SLA, and Notification Design](docs/superpowers/specs/2026-07-13-procurehub-workflow-design.md)
 2. [ProcureHub Design System](docs/design/DESIGN_SYSTEM.md)
 3. [Document Engine Design](docs/superpowers/specs/2026-07-15-procurehub-document-engine-design.md)
-4. [Organization Model](docs/product/ORGANIZATION_MODEL.md)
-5. [Product Terminology](docs/product/TERMINOLOGY.md)
-6. [System Architecture](docs/architecture/SYSTEM_ARCHITECTURE.md)
-7. [Core Data Model](docs/data/CORE_DATA_MODEL.md)
-8. [File and Document Security](docs/security/FILE_AND_DOCUMENT_SECURITY.md)
+4. [Document Numbering Design](docs/superpowers/specs/2026-07-15-procurehub-document-numbering-design.md)
+5. [Organization Model](docs/product/ORGANIZATION_MODEL.md)
+6. [Product Terminology](docs/product/TERMINOLOGY.md)
+7. [System Architecture](docs/architecture/SYSTEM_ARCHITECTURE.md)
+8. [Core Data Model](docs/data/CORE_DATA_MODEL.md)
+9. [File and Document Security](docs/security/FILE_AND_DOCUMENT_SECURITY.md)
 
 Accepted technology decisions:
 
@@ -83,12 +84,14 @@ If two documents conflict and neither is clearly newer or more specific, stop an
 - Uploaded DOCX templates must be scanned, validated, previewed, and explicitly activated. Lifecycle, validation, and preview use separate status fields.
 - Unknown tags prevent activation.
 - Template and contract versions are immutable once used; older versions must never be overwritten.
+- Document template activation requires maker-checker separation in version 1: the uploader cannot activate the same template version.
 - The frontend sends `documentType` and `refId` for final generation, not a complete document payload.
 - The backend loads and maps authoritative data from the database.
 - Node.js prepares the final DOCX template buffer, including optional header/footer image patching, and validates the normalized document data.
 - Carbone On-Premise only renders the prepared DOCX template with the provided JSON payload and converts the result to PDF.
 - Node.js stores the final PDF; temporary Carbone output is not the system of record.
 - Header and footer replacement is an optional DOCX preparation hook before rendering, not a required Carbone feature.
+- Branded document assets resolve from Company + Branch to Company Default only. Missing required assets block generation; final documents never use a Global Default header or footer.
 
 ### 5.3 Separate lifecycle concepts
 

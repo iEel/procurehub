@@ -222,6 +222,7 @@ Each step defines:
 - Name and description
 - Action type
 - Approver resolver code and resolver configuration
+- Resolver scope policy from the approved organization-model policy registry
 - Allow reject
 - Allow return
 - Require comment
@@ -229,6 +230,16 @@ Each step defines:
 - Optional typed condition
 - SLA settings
 - Active flag
+
+The step action type controls user-facing language. Version 1 keeps `approve` as the canonical backend command and `approved` as the terminal task result for `approve`, `review`, and `verify` steps, but the UI labels the command according to the configured step type:
+
+```text
+approve -> Approve / อนุมัติ
+review  -> Complete Review / ตรวจสอบเสร็จสิ้น
+verify  -> Verify / ยืนยันการตรวจสอบ
+```
+
+Approval history stores both the canonical command and the configured step action type. A completed `review` or `verify` step must not be presented as an approval decision in the timeline or generated-document approval snapshot.
 
 ### 8.1 Conditional Steps
 
@@ -292,6 +303,8 @@ Before submission:
 7. Create the workflow instance and first approval round transactionally.
 
 If preflight fails, no partial workflow instance is created. The response identifies the failed step, resolver, company, branch, and department and creates a System Admin alert.
+
+Approver resolution follows the step's explicit `resolverScopePolicy`. Workflow-definition fallback selects a complete workflow; it does not authorize an approver resolver to widen its organization scope.
 
 ### 10.2 Task Creation
 
@@ -381,7 +394,7 @@ resolution_error
 Rules:
 
 - Only the currently assigned user may act on a pending task.
-- Approve completes an `approve`, `review`, or `verify` step according to its configured action.
+- The canonical `approve` command completes an `approve`, `review`, or `verify` step; the UI label and audit description come from the configured step action type.
 - Acknowledge completes an `acknowledge` step.
 - Reject requires a reason and ends the workflow and document lifecycle as rejected.
 - Return requires a reason and sends the document back for editing.

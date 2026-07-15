@@ -71,9 +71,14 @@ Rules:
 | `skipped` | Skipped | ข้ามตามเงื่อนไข | Condition did not apply |
 | `cancelled` | Cancelled | ยกเลิก | Task cancelled by lifecycle change |
 | `resolution_error` | Resolution Error | ไม่พบผู้รับผิดชอบ | Approver could not be resolved |
-| `overdue` | Overdue | เกินกำหนด | Pending task exceeded SLA |
 
-`overdue` is normally a derived flag on a pending task rather than a replacement for its primary status.
+### SLA Indicator
+
+`overdue` is a derived SLA indicator on a `pending` task. It is not an Approval Task status and never replaces the primary task status.
+
+| Code | English | Thai | Meaning |
+| --- | --- | --- | --- |
+| `overdue` | Overdue | เกินกำหนด | Pending task exceeded its calculated SLA due time |
 
 ## 6. Workflow Actions
 
@@ -89,6 +94,16 @@ Rules:
 | `cancel` | Cancel | ยกเลิก | Cancels business document |
 | `generate_pdf` | Generate PDF | สร้าง PDF | Queues document rendering |
 | `retry_resolution` | Retry Resolve Approver | ค้นหาผู้อนุมัติอีกครั้ง | Repairs resolution error |
+
+`approve` remains the canonical version 1 backend command for `approve`, `review`, and `verify` steps. The visible label is derived from the step action type:
+
+| Step action type | UI label (English) | UI label (Thai) | Task result |
+| --- | --- | --- | --- |
+| `approve` | Approve | อนุมัติ | `approved` |
+| `review` | Complete Review | ตรวจสอบเสร็จสิ้น | `approved` |
+| `verify` | Verify | ยืนยันการตรวจสอบ | `approved` |
+
+Approval history records both the canonical command and the configured step action type so a review or verification is never displayed as a business approval.
 
 ## 7. Template Status
 
@@ -119,19 +134,28 @@ Template status is separated into three dimensions.
 | `succeeded` | Preview Succeeded | สร้างตัวอย่างสำเร็จ |
 | `failed` | Preview Failed | สร้างตัวอย่างไม่สำเร็จ |
 
-## 8. Generated Document and Render Job Status
+## 8. Render Job Status
 
 | Code | English | Thai |
 | --- | --- | --- |
 | `queued` | Queued | รอสร้าง |
 | `rendering` | Rendering | กำลังสร้างเอกสาร |
 | `retrying` | Retrying | กำลังลองใหม่ |
+| `succeeded` | Succeeded | ประมวลผลสำเร็จ |
+| `failed` | Failed | สร้างไม่สำเร็จ |
+| `cancelled` | Cancelled | ยกเลิกงานสร้าง |
+
+## 9. Generated Document Status
+
+| Code | English | Thai |
+| --- | --- | --- |
+| `generating` | Generating | กำลังสร้างเอกสาร |
 | `generated` | Generated | สร้างสำเร็จ |
 | `failed` | Failed | สร้างไม่สำเร็จ |
 | `superseded` | Superseded | ถูกแทนที่ด้วยฉบับใหม่ |
 | `voided` | Voided | ยกเลิกการใช้งานเอกสาร |
 
-## 9. Workflow Administration Terms
+## 10. Workflow Administration Terms
 
 | Canonical term | English | Thai |
 | --- | --- | --- |
@@ -147,7 +171,7 @@ Template status is separated into three dimensions.
 | `timeline` | Timeline | ลำดับเหตุการณ์ |
 | `revision` | Revision | ฉบับแก้ไข |
 
-## 10. Display Rules
+## 11. Display Rules
 
 - Thai UI may show the Thai label first and English technical term in help text.
 - Document numbers are never translated or reformatted.
@@ -156,8 +180,9 @@ Template status is separated into three dimensions.
 - Error messages identify the corrective action without exposing internal stack traces.
 - Email and in-app notifications use the same canonical terminology as the application.
 
-## 11. Related Documents
+## 12. Related Documents
 
 - [ProcureHub Design System](../design/DESIGN_SYSTEM.md)
 - [Organization Model](ORGANIZATION_MODEL.md)
 - [Workflow, SLA, and Notification Design](../superpowers/specs/2026-07-13-procurehub-workflow-design.md)
+- [Document Numbering Design](../superpowers/specs/2026-07-15-procurehub-document-numbering-design.md)

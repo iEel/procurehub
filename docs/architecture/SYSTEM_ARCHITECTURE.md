@@ -97,11 +97,11 @@ Private storage, upload validation, malware scan hook, metadata, authorization, 
 
 ### Document Rendering
 
-DOCX preparation, branch assets, Carbone client, render jobs, generated PDFs, and snapshots.
+DOCX preparation, versioned company/branch document assets, Carbone client, render jobs, generated PDFs, and snapshots.
 
 ### Document Numbering
 
-Versioned patterns, sequence allocation, reset periods, uniqueness, and no-reuse rules.
+Versioned patterns, effective-dated rule selection, transactional sequence allocation, reset periods, issuance idempotency, uniqueness, and no-reuse rules.
 
 ### Document Lifecycle
 
@@ -204,7 +204,7 @@ sequenceDiagram
   Mapper-->>API: Contract-shaped data
   API->>API: Validate and enqueue idempotent job
   API-->>UI: Job metadata
-  Worker->>Store: Load template and branch assets
+  Worker->>Store: Load template and resolved document assets
   Worker->>Worker: Prepare DOCX and validate data
   Worker->>C: Prepared DOCX + JSON
   C-->>Worker: PDF buffer
@@ -272,6 +272,7 @@ Physical separation is driven by scaling, security, or operational evidence. Mod
 - [Developer Handoff](../../DEVELOPER_HANDOFF.md)
 - [Organization Model](../product/ORGANIZATION_MODEL.md)
 - [Document Engine Design](../superpowers/specs/2026-07-15-procurehub-document-engine-design.md)
+- [Document Numbering Design](../superpowers/specs/2026-07-15-procurehub-document-numbering-design.md)
 - [Workflow Design](../superpowers/specs/2026-07-13-procurehub-workflow-design.md)
 - [Core Data Model](../data/CORE_DATA_MODEL.md)
 - [File and Document Security](../security/FILE_AND_DOCUMENT_SECURITY.md)

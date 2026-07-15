@@ -264,6 +264,26 @@ No bright, multicolor, or animated gradients are allowed.
 
 Status is never represented by color alone. Every status includes text and, when useful, an icon.
 
+Canonical status-to-token mapping:
+
+| Entity status or indicator | Token family |
+| --- | --- |
+| Approval Task `waiting` | `status-waiting` |
+| Approval Task `pending` | `status-pending` |
+| Approval Task `acknowledged` | `status-acknowledged` |
+| Approval Task `skipped` | `status-skipped` |
+| Approval Task `resolution_error` | `status-resolution-error` |
+| SLA indicator `overdue` | `status-overdue` |
+| Render Job `queued` | `status-waiting` |
+| Render Job `rendering` or `retrying` | `status-generating` |
+| Render Job `succeeded` | `status-generated` |
+| Generated Document `generating` | `status-generating` |
+| Generated Document `generated` | `status-generated` |
+| Render Job or Generated Document `failed` | `status-failed` |
+| Generated Document `superseded` | `status-superseded` |
+| Generated Document `voided` | `status-voided` |
+| Any supported `cancelled` status | `status-cancelled` |
+
 ## 5. Typography
 
 ### 5.1 Font Stack
@@ -536,6 +556,8 @@ Examples: Save Draft, Preview, Download, View Details.
 | Action | Visual treatment |
 | --- | --- |
 | Approve | Green filled button |
+| Complete Review | Primary blue button |
+| Verify | Primary blue button |
 | Acknowledge | Primary blue button |
 | Return for Revision | Orange filled or strongly outlined button |
 | Reject | Red destructive button |
@@ -544,10 +566,12 @@ Examples: Save Draft, Preview, Download, View Details.
 Rules:
 
 - A page normally has no more than one or two primary-looking actions.
+- Review and Verify steps use their own labels even though version 1 sends the canonical backend `approve` command. Do not label these actions as Approve.
 - Return and Reject never share the same color, icon, or confirmation message.
 - Destructive actions require confirmation.
 - Critical actions are not all hidden inside a three-dot menu.
 - Icon-only controls are used only for familiar secondary actions and have accessible names.
+- A template uploader cannot activate the same template version. The Activate control explains the maker-checker requirement instead of appearing silently unavailable.
 
 ## 10. Forms
 

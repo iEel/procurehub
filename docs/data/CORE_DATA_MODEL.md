@@ -20,7 +20,7 @@ createdAt
 createdBy
 updatedAt
 updatedBy
-version
+concurrencyVersion
 ```
 
 Rules:
@@ -119,7 +119,7 @@ Contracts are code-owned and registered at runtime. Template records persist the
 ```text
 documentType
 name
-version
+templateVersion
 lifecycleStatus: draft | active | archived
 validationStatus: pending | valid | invalid
 previewStatus: not_generated | generating | succeeded | failed
@@ -132,18 +132,18 @@ contractVersion
 validationErrorsJson
 lastPreviewedAt nullable
 activatedAt/activatedBy nullable
-version
+concurrencyVersion
 ```
 
-Unique `(documentType, version)`. Exactly one active version per document type in version 1.
+Unique `(documentType, templateVersion)`. Exactly one active template version per document type in version 1.
 
 ### TemplatePreview
 
 Immutable preview attempt with sample case, organization context, prepared asset version, output file, status, duration, and safe error.
 
-### BranchDocumentAssetSet
+### DocumentAssetSet
 
-Versioned header/footer asset set for `(companyId, branchId)`. Old versions are retained.
+Versioned header/footer asset set for `(companyId, branchId nullable)`. A null branch is the Company Default asset scope; no Global Default is allowed for final branded documents. Old versions are retained.
 
 ### PreparedTemplateCache
 
@@ -159,7 +159,7 @@ documentType
 refId
 templateId
 idempotencyKey
-status
+status: queued | rendering | retrying | succeeded | failed | cancelled
 attemptCount/maxAttempts
 lastErrorCode/safeLastError
 requestedBy
@@ -182,7 +182,7 @@ refId
 documentNumber nullable
 templateId/templateVersion
 contractVersion
-branchAssetSetId/assetVersion nullable
+documentAssetSetId/assetVersion nullable
 preparerVersion
 dataSnapshotJson
 approvalSnapshotJson nullable
@@ -208,7 +208,7 @@ approvalRound
 editLocked
 latestGeneratedDocumentId nullable
 returnedBy/returnedAt/returnedReason nullable
-version
+concurrencyVersion
 ```
 
 Unique `(documentType, refId)` within the relevant company boundary.
@@ -239,7 +239,7 @@ departmentId nullable
 
 ```text
 workflowDefinitionId
-version
+workflowVersion
 lifecycleStatus: draft | active | archived
 visualLayoutJson
 createdBy/createdAt
@@ -257,6 +257,7 @@ stepCode
 stepName
 actionType
 approverResolverCode/config
+resolverScopePolicy
 conditionDefinition nullable
 required
 allowReject/allowReturn
@@ -282,7 +283,7 @@ status
 currentRoundNo
 startedBy/startedAt
 completedAt nullable
-version
+concurrencyVersion
 ```
 
 ### ApprovalRound
@@ -304,7 +305,7 @@ assignmentSnapshotJson nullable
 status: waiting | pending | approved | acknowledged | returned | rejected | skipped | cancelled | resolution_error
 dueAt/calendarVersion nullable
 actedBy/actedAt/comment nullable
-version
+concurrencyVersion
 ```
 
 Runtime invariants:
@@ -337,11 +338,15 @@ documentType
 companyId
 branchId nullable
 departmentId nullable
+name
 pattern
 resetPeriod
+issueTriggerAction
+timezone
 effectiveFrom/effectiveTo
 lifecycleStatus
-version
+ruleVersion
+concurrencyVersion
 ```
 
 ### DocumentSequence
@@ -351,14 +356,19 @@ ruleId
 scopeKey
 periodKey
 currentValue
-version
+concurrencyVersion
+updatedAt
 ```
 
 Allocation is transactional and unique. Issued numbers are never reused, including cancelled documents.
 
 ### IssuedDocumentNumber
 
-Immutable record linking allocated number to document type/refId, rule/version, sequence value, and issued timestamp.
+Immutable record containing company, document type/refId, formatted document number, rule ID/rule version, scope key, period key, sequence value, issue-trigger action, actor, and issued timestamp.
+
+### NumberAllocationAudit
+
+Append-only record of allocation, activation, archive, reconciliation, validation failure, and privileged correction events. Allocation and the business lifecycle transition that makes a number official are atomic where the selected persistence adapter supports a shared transaction. A committed issued number is never reused.
 
 ## 11. Notification
 
@@ -401,7 +411,8 @@ erDiagram
   USER ||--o{ APPROVAL_DELEGATION : delegates
 
   DOCUMENT_TEMPLATE ||--o{ TEMPLATE_PREVIEW : previews
-  BRANCH ||--o{ BRANCH_DOCUMENT_ASSET_SET : owns
+  COMPANY ||--o{ DOCUMENT_ASSET_SET : owns
+  BRANCH ||--o{ DOCUMENT_ASSET_SET : optionally_scopes
   RENDER_JOB ||--o{ RENDER_ATTEMPT : attempts
   GENERATED_DOCUMENT }o--|| DOCUMENT_TEMPLATE : uses
 
@@ -415,6 +426,9 @@ erDiagram
   APPROVAL_ROUND ||--o{ APPROVAL_TASK : contains
   APPROVAL_TASK ||--o{ APPROVAL_HISTORY : records
   APPROVAL_TASK ||--o{ APPROVAL_REASSIGNMENT : reassigns
+
+  DOCUMENT_NUMBER_RULE ||--o{ DOCUMENT_SEQUENCE : owns
+  DOCUMENT_NUMBER_RULE ||--o{ ISSUED_DOCUMENT_NUMBER : issues
 ```
 
 ## 14. Concurrency and Uniqueness
@@ -425,7 +439,7 @@ Require database-supported enforcement for:
 - One active workflow version per exact scope
 - One lifecycle record per document type/refId
 - One successful current PDF according to policy
-- Unique document number per numbering scope
+- Unique official document number within a company
 - Non-overlapping primary position assignment per exact scope
 - One valid completion per approval task
 - Idempotency key uniqueness within actor/company/operation scope
@@ -455,4 +469,5 @@ Snapshots exclude secrets, access tokens, raw files, and unnecessary personal da
 - [Product Terminology](../product/TERMINOLOGY.md)
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md)
 - [Document Engine Design](../superpowers/specs/2026-07-15-procurehub-document-engine-design.md)
+- [Document Numbering Design](../superpowers/specs/2026-07-15-procurehub-document-numbering-design.md)
 - [Workflow Design](../superpowers/specs/2026-07-13-procurehub-workflow-design.md)
